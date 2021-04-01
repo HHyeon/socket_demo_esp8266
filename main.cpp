@@ -8,7 +8,7 @@
 
 using namespace std;
 
-char clntbuf[128];
+char clntbuf[512];
 
 
 
@@ -80,7 +80,7 @@ int main()
          string chunk(clntbuf);
          clntbufstr += chunk;
       }
-      cout << "#### recved begin\n" << clntbufstr << "#### receive end\n";
+//      cout << "#### recved begin\n" << clntbufstr << "#### receive end\n";
 
       int firstlineidx = clntbufstr.find("HTTP");
       string querystr;
