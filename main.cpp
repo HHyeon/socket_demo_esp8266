@@ -1,13 +1,47 @@
 #include <iostream>
+#include <sstream>
 #include <winsock2.h>
 #include <conio.h>
+#include <stdio.h>
 
 #define LISTEN_PORT 9009
 
 using namespace std;
 
+char clntbuf[0xFFFF];
 
-char rbuf[512];
+
+
+string plain_text_resp_create(string text)
+{
+   stringstream contentlen;
+   contentlen << text.length();
+   string resp =
+   "HTTP/1.1 200 OK "
+   "Content-Type: text/plain; charset=UTF-8 "
+   "Content-Length: " + contentlen.str() + " "
+   "Connection: close "
+   "\n\n" +
+   text;
+
+   return resp;
+}
+
+string plain_text_resp_create_404(string text)
+{
+   stringstream contentlen;
+   contentlen << text.length();
+   string resp =
+   "HTTP/1.1 404 ERROR "
+   "Content-Type: text/plain; charset=UTF-8 "
+   "Content-Length: " + contentlen.str() + " "
+   "Connection: close "
+   "\n\n" +
+   text;
+
+   return resp;
+}
+
 
 int main()
 {
@@ -29,31 +63,69 @@ int main()
 
    while(1)
    {
-      cout <<"listening at " << LISTEN_PORT << "...\n";
+      cout <<"########## listening at " << LISTEN_PORT << "...\n";
       if((hClntSock = accept(hServSock, (SOCKADDR*) &clntaddr, &szClntAddr)) == INVALID_SOCKET) return 5;
       cout << "accept\n";
 
-      int rlen = 1;
-//      while(rlen)
+      int rlen = recv(hClntSock, clntbuf, sizeof(clntbuf), 0);
+      clntbuf[rlen]=0;
+
+      string clntbufstr(clntbuf);
+      cout << clntbufstr <<endl;
+
+      string resp = plain_text_resp_create("Hello thererer");
+
+      int firstlineidx = clntbufstr.find("\n");
+      if(firstlineidx!=-1)
       {
-         rlen = recv(hClntSock, rbuf, sizeof(rbuf), 0);
-         rbuf[rlen]=0;
-         cout << rlen << ":" << rbuf <<endl;
+         string querystr = clntbufstr.substr(0,firstlineidx);
+         querystr = querystr.substr(querystr.find(" ")+1);
+         querystr = querystr.substr(0, querystr.find(" "));
+         cout << "querystr : " << querystr << endl;
+
+         if(querystr == "/favicon.ico")
+         {
+            resp = plain_text_resp_create_404("ERROR");
+         }
+         else if(querystr == "/hello")
+         {
+            FILE *file = fopen("875px-ASCII-Table-wide.jpeg", "rb");
+            if(file != NULL)
+            {
+               fseek(file, 0, SEEK_END);
+               int fsiz = ftell(file);
+               fseek(file, 0, SEEK_SET);
+
+               char txbuf[512];
+               int rlen = 1;
+
+               stringstream sizstr;
+               sizstr << fsiz;
+               string resp =
+               "HTTP/1.1 200 OK "
+               "Content-Type: image/jpeg "
+               "Content-Length: " + sizstr.str() + " "
+               "Connection: close "
+               "\n\n";
+
+               send(hClntSock, resp.c_str(), resp.length(), 0);
+
+               while(rlen)
+               {
+                  rlen = fread(txbuf, 1, sizeof(txbuf), file);
+                  send(hClntSock, txbuf, rlen, 0);
+               }
+            }
+            else
+            {
+               resp = plain_text_resp_create_404("picture not available");
+            }
+
+            fclose(file);
+         }
       }
 
-      cout << "send respond\n";
-
-      string resp =
-      "HTTP/1.1 200 OK\n"
-      "Content-Type: text/plain; charset=UTF-8\n"
-      "Content-Length: 10\n"
-      "Connection: close\n"
-      "\n\n"
-      "abcdefghi";
-
-      int wlen = send(hClntSock, resp.c_str(), resp.length(), 0);
-      cout << "send " << wlen << endl;
-
+      send(hClntSock, resp.c_str(), resp.length(), 0);
       cout << "client close\n\n";
       closesocket(hClntSock);
    }

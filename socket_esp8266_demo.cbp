@@ -10,10 +10,11 @@
 				<Option output="bin/Debug/socket_esp8266_demo" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
-				<Option compiler="gcc" />
-				<Compiler>
-					<Add option="-g" />
-				</Compiler>
+				<Option compiler="vanilla" />
+				<Option projectCompilerOptionsRelation="2" />
+				<Linker>
+					<Add option="-lws2_32" />
+				</Linker>
 			</Target>
 			<Target title="Release">
 				<Option output="bin/Release/socket_esp8266_demo" prefix_auto="1" extension_auto="1" />
