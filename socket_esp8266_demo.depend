@@ -1,8 +1,10 @@
 # depslib dependency file v1.0
-1617199544 source:c:\users\hyeon-desktop\documents\cdbl_workspace\socket_esp8266_demo\main.cpp
+1617279944 source:c:\users\hyeon-desktop\documents\cdbl_workspace\socket_esp8266_demo\main.cpp
 	<iostream>
+	<sstream>
 	<winsock2.h>
 	<conio.h>
+	<stdio.h>
 
 1617266461 source:c:\users\hyeon-desk\documents\cdbl_work\socket_demo_esp8266\main.cpp
 	<iostream>

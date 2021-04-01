@@ -17,11 +17,11 @@ string plain_text_resp_create(string text)
    stringstream contentlen;
    contentlen << text.length();
    string resp =
-   "HTTP/1.1 200 OK "
-   "Content-Type: text/plain; charset=UTF-8 "
-   "Content-Length: " + contentlen.str() + " "
-   "Connection: close "
-   "\n\n" +
+   "HTTP/1.1 200\r\n"
+   "Content-Type: text/plain; charset=UTF-8\r\n"
+   "Content-Length: " + contentlen.str() + "\r\n"
+   "Connection: close\r\n"
+   "\r\n" +
    text;
 
    return resp;
@@ -32,11 +32,11 @@ string plain_text_resp_create_404(string text)
    stringstream contentlen;
    contentlen << text.length();
    string resp =
-   "HTTP/1.1 404 ERROR "
-   "Content-Type: text/plain; charset=UTF-8 "
-   "Content-Length: " + contentlen.str() + " "
-   "Connection: close "
-   "\n\n" +
+   "HTTP/1.1 404\r\n"
+   "Content-Type: text/plain; charset=UTF-8\r\n"
+   "Content-Length: " + contentlen.str() + "\r\n"
+   "Connection: close\r\n"
+   "\r\n" +
    text;
 
    return resp;
@@ -117,11 +117,11 @@ int main()
                stringstream sizstr;
                sizstr << fsiz;
                resp =
-               "HTTP/1.1 200 OK "
-               "Content-Type: image/jpeg "
-               "Content-Length: " + sizstr.str() + " "
-               "Connection: close "
-               "\n\n";
+               "HTTP/1.1 200 OK\r\n"
+               "Content-Type: image/jpeg\r\n"
+               "Content-Length: " + sizstr.str() + "\r\n"
+               "Connection: close\r\n"
+               "\r\n";
 
                send(hClntSock, resp.c_str(), resp.length(), 0);
 
