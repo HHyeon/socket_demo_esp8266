@@ -8,7 +8,7 @@
 
 using namespace std;
 
-char clntbuf[0xFFFF];
+char clntbuf[128];
 
 
 
@@ -65,27 +65,42 @@ int main()
    {
       cout <<"########## listening at " << LISTEN_PORT << "...\n";
       if((hClntSock = accept(hServSock, (SOCKADDR*) &clntaddr, &szClntAddr)) == INVALID_SOCKET) return 5;
-      cout << "accept\n";
 
-      int rlen = recv(hClntSock, clntbuf, sizeof(clntbuf), 0);
-      clntbuf[rlen]=0;
+      DWORD rcvtimeout = 500;
+      setsockopt(hClntSock, SOL_SOCKET, SO_RCVTIMEO, (char*)&rcvtimeout, sizeof(rcvtimeout));
 
-      string clntbufstr(clntbuf);
-      cout << clntbufstr <<endl;
+      cout << "accept " << inet_ntoa(clntaddr.sin_addr) << endl;
 
-      string resp = plain_text_resp_create("Hello thererer");
+      string clntbufstr = "";
 
-      int firstlineidx = clntbufstr.find("\n");
-      if(firstlineidx!=-1)
+      int rlen = 1;
+      while(rlen > 0)
       {
-         string querystr = clntbufstr.substr(0,firstlineidx);
+         rlen = recv(hClntSock, clntbuf, sizeof(clntbuf), 0);
+         string chunk(clntbuf);
+         clntbufstr += chunk;
+      }
+      cout << "#### recved begin\n" << clntbufstr << "#### receive end\n";
+
+      int firstlineidx = clntbufstr.find("HTTP");
+      string querystr;
+
+      if(firstlineidx == -1)
+      {
+         //empty responce
+      }
+      else
+      {
+         querystr = clntbufstr.substr(0,firstlineidx);
          querystr = querystr.substr(querystr.find(" ")+1);
          querystr = querystr.substr(0, querystr.find(" "));
          cout << "querystr : " << querystr << endl;
 
+         string resp;
          if(querystr == "/favicon.ico")
          {
             resp = plain_text_resp_create_404("ERROR");
+            send(hClntSock, resp.c_str(), resp.length(), 0);
          }
          else if(querystr == "/hello")
          {
@@ -101,7 +116,7 @@ int main()
 
                stringstream sizstr;
                sizstr << fsiz;
-               string resp =
+               resp =
                "HTTP/1.1 200 OK "
                "Content-Type: image/jpeg "
                "Content-Length: " + sizstr.str() + " "
@@ -115,17 +130,23 @@ int main()
                   rlen = fread(txbuf, 1, sizeof(txbuf), file);
                   send(hClntSock, txbuf, rlen, 0);
                }
+
+
+               fclose(file);
             }
             else
             {
                resp = plain_text_resp_create_404("picture not available");
+               send(hClntSock, resp.c_str(), resp.length(), 0);
             }
-
-            fclose(file);
+         }
+         else
+         {
+            resp = plain_text_resp_create("empty uri query data");
+            send(hClntSock, resp.c_str(), resp.length(), 0);
          }
       }
 
-      send(hClntSock, resp.c_str(), resp.length(), 0);
       cout << "client close\n\n";
       closesocket(hClntSock);
    }
